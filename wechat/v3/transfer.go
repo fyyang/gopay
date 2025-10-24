@@ -7,12 +7,12 @@ import (
 	"net/http"
 
 	"github.com/go-pay/gopay"
+	"github.com/go-pay/util/js"
 )
 
 // 发起商家转账API
-//	注意：入参加密字段数据加密：client.V3EncryptText()
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_1.shtml
+// 注意：入参加密字段数据加密：client.V3EncryptText()
+// Code = 0 is success
 func (c *ClientV3) V3Transfer(ctx context.Context, bm gopay.BodyMap) (*TransferRsp, error) {
 	authorization, err := c.authorization(MethodPost, v3Transfer, bm)
 	if err != nil {
@@ -22,24 +22,22 @@ func (c *ClientV3) V3Transfer(ctx context.Context, bm gopay.BodyMap) (*TransferR
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(Transfer)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferRsp{Code: Success, SignInfo: si, Response: new(Transfer)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 发起批量转账API（服务商）
-//	注意：入参加密字段数据加密：client.V3EncryptText()
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_1.shtml
+// 注意：入参加密字段数据加密：client.V3EncryptText()
+// Code = 0 is success
 func (c *ClientV3) V3PartnerTransfer(ctx context.Context, bm gopay.BodyMap) (*TransferRsp, error) {
 	authorization, err := c.authorization(MethodPost, v3PartnerTransfer, bm)
 	if err != nil {
@@ -49,23 +47,21 @@ func (c *ClientV3) V3PartnerTransfer(ctx context.Context, bm gopay.BodyMap) (*Tr
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(Transfer)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferRsp{Code: Success, SignInfo: si, Response: new(Transfer)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
-// 微信批次单号查询批次单API
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_2.shtml
+// 通过微信批次单号查询批次单
+// Code = 0 is success
 func (c *ClientV3) V3TransferQuery(ctx context.Context, batchId string, bm gopay.BodyMap) (*TransferQueryRsp, error) {
 	url := fmt.Sprintf(v3TransferQuery, batchId)
 	bm.Remove("batch_id")
@@ -78,23 +74,21 @@ func (c *ClientV3) V3TransferQuery(ctx context.Context, batchId string, bm gopay
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferQueryRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(TransferQuery)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferQueryRsp{Code: Success, SignInfo: si, Response: new(TransferQuery)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 微信批次单号查询批次单API（服务商）
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_2.shtml
+// Code = 0 is success
 func (c *ClientV3) V3PartnerTransferQuery(ctx context.Context, batchId string, bm gopay.BodyMap) (*PartnerTransferQueryRsp, error) {
 	url := fmt.Sprintf(v3PartnerTransferQuery, batchId)
 	bm.Remove("batch_id")
@@ -107,23 +101,21 @@ func (c *ClientV3) V3PartnerTransferQuery(ctx context.Context, batchId string, b
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &PartnerTransferQueryRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(PartnerTransferQuery)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &PartnerTransferQueryRsp{Code: Success, SignInfo: si, Response: new(PartnerTransferQuery)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
-// 微信明细单号查询明细单API
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_3.shtml
+// 通过微信明细单号查询明细单
+// Code = 0 is success
 func (c *ClientV3) V3TransferDetail(ctx context.Context, batchId, detailId string) (*TransferDetailRsp, error) {
 	url := fmt.Sprintf(v3TransferDetail, batchId, detailId)
 	authorization, err := c.authorization(MethodGet, url, nil)
@@ -134,23 +126,21 @@ func (c *ClientV3) V3TransferDetail(ctx context.Context, batchId, detailId strin
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferDetailRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(TransferDetailQuery)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferDetailRsp{Code: Success, SignInfo: si, Response: new(TransferDetailQuery)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 微信明细单号查询明细单API（服务商）
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_3.shtml
+// Code = 0 is success
 func (c *ClientV3) V3PartnerTransferDetail(ctx context.Context, batchId, detailId string) (*PartnerTransferDetailRsp, error) {
 	url := fmt.Sprintf(v3PartnerTransferDetail, batchId, detailId)
 	authorization, err := c.authorization(MethodGet, url, nil)
@@ -161,29 +151,21 @@ func (c *ClientV3) V3PartnerTransferDetail(ctx context.Context, batchId, detailI
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &PartnerTransferDetailRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(PartnerTransferDetail)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &PartnerTransferDetailRsp{Code: Success, SignInfo: si, Response: new(PartnerTransferDetail)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
-// Deprecated
-// 推荐直接使用 client.V3TransferDetail() 方法
-func (c *ClientV3) V3TransferDetailQuery(ctx context.Context, batchId, detailId string) (*TransferDetailRsp, error) {
-	return c.V3TransferDetail(ctx, batchId, detailId)
-}
-
-// 商家批次单号查询批次单API
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_5.shtml
+// 通过商家批次单号查询批次单
+// Code = 0 is success
 func (c *ClientV3) V3TransferMerchantQuery(ctx context.Context, outBatchNo string, bm gopay.BodyMap) (*TransferMerchantQueryRsp, error) {
 	url := fmt.Sprintf(v3TransferMerchantQuery, outBatchNo)
 	bm.Remove("out_batch_no")
@@ -196,23 +178,21 @@ func (c *ClientV3) V3TransferMerchantQuery(ctx context.Context, outBatchNo strin
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferMerchantQueryRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(TransferMerchantQuery)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferMerchantQueryRsp{Code: Success, SignInfo: si, Response: new(TransferMerchantQuery)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 商家批次单号查询批次单API（服务商）
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_4.shtml
+// Code = 0 is success
 func (c *ClientV3) V3PartnerTransferMerchantQuery(ctx context.Context, outBatchNo string, bm gopay.BodyMap) (*PartnerTransferMerchantQueryRsp, error) {
 	url := fmt.Sprintf(v3PartnerTransferMerchantQuery, outBatchNo)
 	bm.Remove("out_batch_no")
@@ -225,23 +205,21 @@ func (c *ClientV3) V3PartnerTransferMerchantQuery(ctx context.Context, outBatchN
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &PartnerTransferMerchantQueryRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(PartnerTransferMerchantQuery)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &PartnerTransferMerchantQueryRsp{Code: Success, SignInfo: si, Response: new(PartnerTransferMerchantQuery)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
-// 商家明细单号查询明细单API
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_6.shtml
+// 通过商家明细单号查询明细单
+// Code = 0 is success
 func (c *ClientV3) V3TransferMerchantDetail(ctx context.Context, outBatchNo, outDetailNo string) (*TransferMerchantDetailRsp, error) {
 	url := fmt.Sprintf(v3TransferMerchantDetail, outBatchNo, outDetailNo)
 	authorization, err := c.authorization(MethodGet, url, nil)
@@ -252,23 +230,21 @@ func (c *ClientV3) V3TransferMerchantDetail(ctx context.Context, outBatchNo, out
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferMerchantDetailRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(TransferMerchantDetail)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferMerchantDetailRsp{Code: Success, SignInfo: si, Response: new(TransferMerchantDetail)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 商家明细单号查询明细单API（服务商）
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_5.shtml
+// Code = 0 is success
 func (c *ClientV3) V3PartnerTransferMerchantDetail(ctx context.Context, outBatchNo, outDetailNo string) (*PartnerTransferMerchantDetailRsp, error) {
 	url := fmt.Sprintf(v3PartnerTransferMerchantDetail, outBatchNo, outDetailNo)
 	authorization, err := c.authorization(MethodGet, url, nil)
@@ -279,34 +255,24 @@ func (c *ClientV3) V3PartnerTransferMerchantDetail(ctx context.Context, outBatch
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &PartnerTransferMerchantDetailRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(PartnerTransferMerchantDetail)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &PartnerTransferMerchantDetailRsp{Code: Success, SignInfo: si, Response: new(PartnerTransferMerchantDetail)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
-// Deprecated
-// 推荐直接使用 client.V3TransferMerchantDetail() 方法
-func (c *ClientV3) V3TransferMerchantDetailQuery(ctx context.Context, outBatchNo, outDetailNo string) (*TransferMerchantDetailRsp, error) {
-	return c.V3TransferMerchantDetail(ctx, outBatchNo, outDetailNo)
-}
-
-// 转账电子回单申请受理API
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_7.shtml
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_6.shtml
+// 转账账单电子回单申请受理接口
+// Code = 0 is success
 func (c *ClientV3) V3TransferReceipt(ctx context.Context, outBatchNo string) (*TransferReceiptRsp, error) {
 	bm := make(gopay.BodyMap)
 	bm.Set("out_batch_no", outBatchNo)
-
 	authorization, err := c.authorization(MethodPost, v3TransferReceipt, bm)
 	if err != nil {
 		return nil, err
@@ -315,24 +281,21 @@ func (c *ClientV3) V3TransferReceipt(ctx context.Context, outBatchNo string) (*T
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferReceiptRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(TransferReceipt)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferReceiptRsp{Code: Success, SignInfo: si, Response: new(TransferReceipt)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
-// 查询转账电子回单API
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_8.shtml
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_7.shtml
+// 查询转账账单电子回单接口
+// Code = 0 is success
 func (c *ClientV3) V3TransferReceiptQuery(ctx context.Context, outBatchNo string) (*TransferReceiptQueryRsp, error) {
 	url := fmt.Sprintf(v3TransferReceiptQuery, outBatchNo)
 	authorization, err := c.authorization(MethodGet, url, nil)
@@ -343,24 +306,21 @@ func (c *ClientV3) V3TransferReceiptQuery(ctx context.Context, outBatchNo string
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferReceiptQueryRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(TransferReceiptQuery)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferReceiptQueryRsp{Code: Success, SignInfo: si, Response: new(TransferReceiptQuery)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 转账明细电子回单受理API
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_9.shtml
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_8.shtml
+// Code = 0 is success
 func (c *ClientV3) V3TransferDetailReceipt(ctx context.Context, bm gopay.BodyMap) (*TransferDetailReceiptRsp, error) {
 	authorization, err := c.authorization(MethodPost, v3TransferDetailReceipt, bm)
 	if err != nil {
@@ -370,24 +330,21 @@ func (c *ClientV3) V3TransferDetailReceipt(ctx context.Context, bm gopay.BodyMap
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferDetailReceiptRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(TransferDetailReceipt)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferDetailReceiptRsp{Code: Success, SignInfo: si, Response: new(TransferDetailReceipt)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 查询转账明细电子回单受理结果API
-//	Code = 0 is success
-// 	商户文档：https://pay.weixin.qq.com/wiki/doc/apiv3/apis/chapter4_3_10.shtml
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/Offline/apis/chapter4_3_9.shtml
+// Code = 0 is success
 func (c *ClientV3) V3TransferDetailReceiptQuery(ctx context.Context, bm gopay.BodyMap) (*TransferDetailReceiptQueryRsp, error) {
 	uri := v3TransferDetailReceiptQuery + "?" + bm.EncodeURLParams()
 	authorization, err := c.authorization(MethodGet, uri, nil)
@@ -398,16 +355,15 @@ func (c *ClientV3) V3TransferDetailReceiptQuery(ctx context.Context, bm gopay.Bo
 	if err != nil {
 		return nil, err
 	}
-
-	wxRsp := &TransferDetailReceiptQueryRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(TransferDetailReceiptQuery)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp := &TransferDetailReceiptQueryRsp{Code: Success, SignInfo: si, Response: new(TransferDetailReceiptQuery)}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }

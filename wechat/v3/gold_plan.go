@@ -7,11 +7,11 @@ import (
 	"net/http"
 
 	"github.com/go-pay/gopay"
+	"github.com/go-pay/util/js"
 )
 
 // 点金计划管理API
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_5_1.shtml
+// Code = 0 is success
 func (c *ClientV3) V3GoldPlanManage(ctx context.Context, bm gopay.BodyMap) (wxRsp *GoldPlanManageRsp, err error) {
 	authorization, err := c.authorization(MethodPost, v3GoldPlanManage, bm)
 	if err != nil {
@@ -21,22 +21,21 @@ func (c *ClientV3) V3GoldPlanManage(ctx context.Context, bm gopay.BodyMap) (wxRs
 	if err != nil {
 		return nil, err
 	}
-	wxRsp = &GoldPlanManageRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(GoldPlanManage)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp = &GoldPlanManageRsp{Code: Success, SignInfo: si, Response: &GoldPlanManage{}}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 商家小票管理API
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_5_2.shtml
+// Code = 0 is success
 func (c *ClientV3) V3GoldPlanBillManage(ctx context.Context, bm gopay.BodyMap) (wxRsp *GoldPlanManageRsp, err error) {
 	authorization, err := c.authorization(MethodPost, v3GoldPlanBillManage, bm)
 	if err != nil {
@@ -46,22 +45,21 @@ func (c *ClientV3) V3GoldPlanBillManage(ctx context.Context, bm gopay.BodyMap) (
 	if err != nil {
 		return nil, err
 	}
-	wxRsp = &GoldPlanManageRsp{Code: Success, SignInfo: si}
-	wxRsp.Response = new(GoldPlanManage)
-	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
-		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
-	}
+	wxRsp = &GoldPlanManageRsp{Code: Success, SignInfo: si, Response: &GoldPlanManage{}}
 	if res.StatusCode != http.StatusOK {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
+	}
+	if err = json.Unmarshal(bs, wxRsp.Response); err != nil {
+		return nil, fmt.Errorf("[%w]: %v, bytes: %s", gopay.UnmarshalErr, err, string(bs))
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 同业过滤标签管理API
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_5_3.shtml
+// Code = 0 is success
 func (c *ClientV3) V3GoldPlanFilterManage(ctx context.Context, bm gopay.BodyMap) (wxRsp *EmptyRsp, err error) {
 	authorization, err := c.authorization(MethodPost, v3GoldPlanFilterManage, bm)
 	if err != nil {
@@ -75,14 +73,14 @@ func (c *ClientV3) V3GoldPlanFilterManage(ctx context.Context, bm gopay.BodyMap)
 	if res.StatusCode != http.StatusNoContent {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 开通广告展示API
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_5_4.shtml
+// Code = 0 is success
 func (c *ClientV3) V3GoldPlanOpenAdShow(ctx context.Context, bm gopay.BodyMap) (wxRsp *EmptyRsp, err error) {
 	authorization, err := c.authorization(MethodPATCH, v3GoldPlanOpenAdShow, bm)
 	if err != nil {
@@ -96,14 +94,14 @@ func (c *ClientV3) V3GoldPlanOpenAdShow(ctx context.Context, bm gopay.BodyMap) (
 	if res.StatusCode != http.StatusNoContent {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
 	}
 	return wxRsp, c.verifySyncSign(si)
 }
 
 // 关闭广告展示API
-//	Code = 0 is success
-//	服务商文档：https://pay.weixin.qq.com/wiki/doc/apiv3_partner/apis/chapter8_5_5.shtml
+// Code = 0 is success
 func (c *ClientV3) V3GoldPlanCloseAdShow(ctx context.Context, bm gopay.BodyMap) (wxRsp *EmptyRsp, err error) {
 	authorization, err := c.authorization(MethodPATCH, v3GoldPlanCloseAdShow, bm)
 	if err != nil {
@@ -117,6 +115,7 @@ func (c *ClientV3) V3GoldPlanCloseAdShow(ctx context.Context, bm gopay.BodyMap) 
 	if res.StatusCode != http.StatusNoContent {
 		wxRsp.Code = res.StatusCode
 		wxRsp.Error = string(bs)
+		_ = js.UnmarshalBytes(bs, &wxRsp.ErrResponse)
 		return wxRsp, nil
 	}
 	return wxRsp, c.verifySyncSign(si)

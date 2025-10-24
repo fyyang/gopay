@@ -1,26 +1,57 @@
 package xhttp
 
-type RequestType string
-
-const (
-	GET                               = "GET"
-	POST                              = "POST"
-	PUT                               = "PUT"
-	DELETE                            = "DELETE"
-	PATCH                             = "PATCH"
-	TypeJSON              RequestType = "json"
-	TypeXML               RequestType = "xml"
-	TypeUrlencoded        RequestType = "urlencoded"
-	TypeForm              RequestType = "form"
-	TypeFormData          RequestType = "form-data"
-	TypeMultipartFormData RequestType = "multipart-form-data"
+import (
+	"encoding/json"
+	"strings"
 )
 
-var types = map[RequestType]string{
-	TypeJSON:              "application/json",
-	TypeXML:               "application/xml",
-	TypeUrlencoded:        "application/x-www-form-urlencoded",
-	TypeForm:              "application/x-www-form-urlencoded",
-	TypeFormData:          "application/x-www-form-urlencoded",
-	TypeMultipartFormData: "multipart/form-data",
+const (
+	GET    = "GET"
+	POST   = "POST"
+	PUT    = "PUT"
+	DELETE = "DELETE"
+	PATCH  = "PATCH"
+
+	ResTypeJSON = "json"
+	ResTypeXML  = "xml"
+
+	TypeJSON              = "json"
+	TypeXML               = "xml"
+	TypeFormData          = "form-data"
+	TypeMultipartFormData = "multipart-form-data"
+)
+
+var (
+	_ReqContentTypeMap = map[string]string{
+		TypeJSON:              "application/json",
+		TypeXML:               "application/xml",
+		TypeFormData:          "application/x-www-form-urlencoded",
+		TypeMultipartFormData: "multipart/form-data",
+	}
+
+	_ResTypeMap = map[string]string{
+		ResTypeJSON: "application/json",
+		ResTypeXML:  "application/xml",
+	}
+)
+
+func ConvertToString(v any) (str string) {
+	if v == nil {
+		return ""
+	}
+	var (
+		bs  []byte
+		err error
+	)
+	if bs, err = json.Marshal(v); err != nil {
+		return ""
+	}
+	str = string(bs)
+	return
+}
+
+var quoteEscaper = strings.NewReplacer("\\", "\\\\", `"`, "\\\"")
+
+func escapeQuotes(s string) string {
+	return quoteEscaper.Replace(s)
 }

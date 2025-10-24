@@ -3,7 +3,7 @@ package alipay
 import (
 	"testing"
 
-	"github.com/go-pay/gopay/pkg/xlog"
+	"github.com/go-pay/xlog"
 )
 
 func TestMonitorHeartbeatSyn(t *testing.T) {
@@ -17,4 +17,20 @@ func TestMonitorHeartbeatSyn(t *testing.T) {
 		return
 	}
 	xlog.Info("rsp.Response:", *rsp.Response)
+}
+
+func TestDecryptOpenDataToStruct(t *testing.T) {
+	data := "MkvuiIZsGOC8S038cu/JIpoRKnF+ZFjoIRGf5d/K4+ctYjCtb/eEkwgrdB5TeH/93bxff1Ylb+SE+UGStlpvcg=="
+	key := "TDftre9FpItr46e9BVNJcw=="
+	rsp := new(UserPhone)
+	err := DecryptOpenDataToStruct(data, key, rsp)
+	if err != nil {
+		xlog.Error("err:", err)
+		return
+	}
+	xlog.Debug("rsp.Code:", rsp.Code)
+	xlog.Debug("rsp.Msg:", rsp.Msg)
+	xlog.Debug("rsp.SubCode:", rsp.SubCode)
+	xlog.Debug("rsp.SubMsg:", rsp.SubMsg)
+	xlog.Debug("rsp.Mobile:", rsp.Mobile)
 }

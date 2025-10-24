@@ -5,29 +5,8 @@ import (
 
 	"github.com/go-pay/gopay"
 	"github.com/go-pay/gopay/alipay/cert"
-	"github.com/go-pay/gopay/pkg/xlog"
+	"github.com/go-pay/xlog"
 )
-
-func TestClient_SystemOauthToken(t *testing.T) {
-	// 请求参数
-	bm := make(gopay.BodyMap)
-	bm.Set("grant_type", "authorization_code")
-	bm.Set("code", "3a06216ac8f84b8c93507bb9774bWX11")
-
-	// 发起请求
-	aliRsp, err := client.SystemOauthToken(ctx, bm)
-	if err != nil {
-		if bizErr, ok := IsBizError(err); ok {
-			xlog.Errorf("%+v", bizErr)
-			// do something
-			return
-		}
-		return
-	}
-	xlog.Debug("aliRsp:", *aliRsp)
-	xlog.Debug("aliRsp:", aliRsp.Response.AccessToken)
-	xlog.Debug("aliRsp:", aliRsp.SignData)
-}
 
 func TestClient_OpenAuthTokenApp(t *testing.T) {
 	// 请求参数
@@ -51,7 +30,7 @@ func TestClient_OpenAuthTokenApp(t *testing.T) {
 func TestClient_OpenAuthTokenAppQuery(t *testing.T) {
 	// 请求参数
 	bm := make(gopay.BodyMap)
-	bm.Set("app_auth_token", "202212BB9e1cd0c2e0ab489393aa2570ec4faX87")
+	bm.Set(AppAuthToken, "202212BB9e1cd0c2e0ab489393aa2570ec4faX87")
 
 	// 发起请求
 	aliRsp, err := client.OpenAuthTokenAppQuery(ctx, bm)
@@ -74,7 +53,7 @@ func TestClient_UserInfoAuth(t *testing.T) {
 		Set("state", "init")
 
 	// 发起请求
-	aliRsp, err := client.UserInfoAuth(ctx, bm)
+	html, err := client.UserInfoAuth(ctx, bm)
 	if err != nil {
 		if bizErr, ok := IsBizError(err); ok {
 			xlog.Errorf("%+v", bizErr)
@@ -83,18 +62,14 @@ func TestClient_UserInfoAuth(t *testing.T) {
 		}
 		return
 	}
-	xlog.Debug("aliRsp:", *aliRsp)
+	xlog.Debugf("html: %s", string(html))
 }
 
 func TestClient_UserInfoShare(t *testing.T) {
 	// 发起请求
-	aliRsp, err := client.UserInfoShare(ctx, "auth_token")
+	aliRsp, err := client.UserInfoShare(ctx, "authbseBb6dd42c0d93a47dfa1b23aa725778X18")
 	if err != nil {
-		if bizErr, ok := IsBizError(err); ok {
-			xlog.Errorf("%+v", bizErr)
-			// do something
-			return
-		}
+		xlog.Errorf("%+v", err)
 		return
 	}
 	xlog.Debug("aliRsp:", *aliRsp)

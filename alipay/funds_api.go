@@ -6,7 +6,6 @@ import (
 	"fmt"
 
 	"github.com/go-pay/gopay"
-	"github.com/go-pay/gopay/pkg/util"
 )
 
 // alipay.fund.trans.uni.transfer(单笔转账接口)
@@ -102,7 +101,7 @@ func (a *Client) FundTransOrderQuery(ctx context.Context, bm gopay.BodyMap) (ali
 }
 
 // alipay.fund.trans.refund(资金退回接口)
-// 文档地址: https://opendocs.alipay.com/apis/api_28/alipay.fund.trans.refund
+// 文档地址: https://opendocs.alipay.com/open/02byvd
 func (a *Client) FundTransRefund(ctx context.Context, bm gopay.BodyMap) (aliRsp *FundTransRefundResponse, err error) {
 	err = bm.CheckEmptyError("order_id", "out_request_no", "refund_amount")
 	if err != nil {
@@ -171,18 +170,18 @@ func (a *Client) FundAuthOrderVoucherCreate(ctx context.Context, bm gopay.BodyMa
 }
 
 // alipay.fund.auth.order.app.freeze(线上资金授权冻结接口)
-// 文档地址: https://opendocs.alipay.com/apis/api_28/alipay.fund.auth.order.app.freeze
-func (a *Client) FundAuthOrderAppFreeze(ctx context.Context, bm gopay.BodyMap) (payParam string, err error) {
+// 文档地址: https://opendocs.alipay.com/open/02f912
+func (a *Client) FundAuthOrderAppFreeze(ctx context.Context, bm gopay.BodyMap) (orderStr string, err error) {
 	err = bm.CheckEmptyError("out_order_no", "out_request_no", "order_title", "amount", "product_code")
 	if err != nil {
-		return util.NULL, err
+		return gopay.NULL, err
 	}
 	var bs []byte
 	if bs, err = a.doAliPay(ctx, bm, "alipay.fund.auth.order.app.freeze"); err != nil {
 		return "", err
 	}
-	payParam = string(bs)
-	return payParam, nil
+	orderStr = string(bs)
+	return orderStr, nil
 }
 
 // alipay.fund.auth.order.unfreeze(资金授权解冻接口)
@@ -320,26 +319,18 @@ func (a *Client) FundBatchDetailQuery(ctx context.Context, bm gopay.BodyMap) (al
 }
 
 // alipay.fund.trans.app.pay(现金红包无线支付接口)
-// 文档地址: https://opendocs.alipay.com/apis/api_28/alipay.fund.trans.app.pay
-func (a *Client) FundTransAppPay(ctx context.Context, bm gopay.BodyMap) (aliRsp *FundTransAppPayResponse, err error) {
+// 文档地址: https://opendocs.alipay.com/open/03rbyf
+func (a *Client) FundTransAppPay(ctx context.Context, bm gopay.BodyMap) (pageRedirectionData string, err error) {
 	err = bm.CheckEmptyError("out_biz_no", "trans_amount", "product_code", "biz_scene")
 	if err != nil {
-		return nil, err
+		return gopay.NULL, err
 	}
 	var bs []byte
 	if bs, err = a.doAliPay(ctx, bm, "alipay.fund.trans.app.pay"); err != nil {
-		return nil, err
+		return "", err
 	}
-	aliRsp = new(FundTransAppPayResponse)
-	if err = json.Unmarshal(bs, aliRsp); err != nil || aliRsp.Response == nil {
-		return nil, fmt.Errorf("[%w], bytes: %s", gopay.UnmarshalErr, string(bs))
-	}
-	if err = bizErrCheck(aliRsp.Response.ErrorResponse); err != nil {
-		return aliRsp, err
-	}
-	signData, signDataErr := a.getSignData(bs, aliRsp.AlipayCertSn)
-	aliRsp.SignData = signData
-	return aliRsp, a.autoVerifySignByCert(aliRsp.Sign, signData, signDataErr)
+	pageRedirectionData = string(bs)
+	return pageRedirectionData, nil
 }
 
 // alipay.fund.trans.payee.bind.query(资金收款账号绑定关系查询)
@@ -366,7 +357,7 @@ func (a *Client) FundTransPayeeBindQuery(ctx context.Context, bm gopay.BodyMap) 
 }
 
 // alipay.fund.trans.page.pay(资金转账页面支付接口)
-// 文档地址: https://opendocs.alipay.com/apis/api_1/alipay.fund.trans.page.pay
+// 文档地址: https://opendocs.alipay.com/open/03rbye
 func (a *Client) FundTransPagePay(ctx context.Context, bm gopay.BodyMap) (aliRsp *FundTransPagePayRsp, err error) {
 	err = bm.CheckEmptyError("out_biz_no", "trans_amount", "product_code", "biz_scene")
 	if err != nil {
